@@ -61,7 +61,10 @@ if __name__ == "__main__":
     threading.Thread(target=run_server, daemon=True).start()
 
     webview.create_window(
-        "ACGN Studio", "http://127.0.0.1:8000", width=1000, height=700
+        "ACGN Studio",
+        "http://127.0.0.1:8000",
+        width=1000,
+        height=700,
     )
     _write_log("[OK] webview.create_window done, calling webview.start()")
     webview.start()

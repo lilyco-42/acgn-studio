@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ACGN Studio</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23f4c430'/><text x='50' y='68' font-size='60' text-anchor='middle' fill='%231e1e2e' font-family='Arial' font-weight='bold'>A</text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
@@ -48,6 +49,9 @@
         .voice-dl { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #444; background: transparent; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
         .voice-dl:hover { border-color: #f4c430; color: #f4c430; }
         .voice-dl.done { border-color: #2cb491; color: #2cb491; }
+        .voice-copy { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #444; background: transparent; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
+        .voice-copy:hover { border-color: #88a3e8; color: #88a3e8; }
+        .voice-copy.copied { border-color: #2cb491; color: #2cb491; }
         .illustration-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
         .illust-card { position: relative; border-radius: 8px; overflow: hidden; background: #12121e; }
         .illust-card img { width: 100%; display: block; }
@@ -229,6 +233,7 @@
                             <button class="voice-play" onclick="playVoice('${audioUrl}')">▶</button>
                             <span class="voice-title">${v.title}</span>
                             <span class="voice-text">${v.text}</span>
+                            <button class="voice-copy" title="复制台词" onclick="copyText(this, '${v.text.replace(/'/g, "\\'")}')">复制</button>
                             <button class="voice-dl" id="dl-vc-${vk}" onclick="event.stopPropagation();downloadFile('${audioUrl}','${fname}','dl-vc-${vk}')">⬇</button>
                         </div>`;
                 }
@@ -249,6 +254,25 @@
             if (currentAudio) { currentAudio.pause(); }
             currentAudio = new Audio(url);
             currentAudio.play();
+        }
+
+        async function copyText(btn, text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                btn.textContent = '已复制';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1500);
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                btn.textContent = '已复制';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1500);
+            }
         }
 
         async function downloadFile(url, filename, btnId) {
