@@ -25,7 +25,7 @@ def build():
         "--product-version=0.1.0",
         f"--output-dir={ROOT / 'build'}",
         "--output-filename=ACGN-Studio.exe",
-        f"--windows-icon-from-ico={ROOT / 'assets' / 'icon.ico'}",
+        f"--windows-icon-from-ico={ROOT / 'assets' / 'prts.ico'}",
         "--assume-yes-for-downloads",
         "--include-windows-runtime-dlls=no",
         # 数据文件
