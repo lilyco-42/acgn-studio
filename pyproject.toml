@@ -1,7 +1,7 @@
 [project]
 name = "search"
 version = "0.1.0"
-description = "Add your description here"
+description = "明日方舟干员数据平台 — 搜索、浏览、下载角色立绘与语音素材"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
