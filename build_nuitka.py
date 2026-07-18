@@ -42,7 +42,7 @@ def build():
         "--include-package=pythonnet",
         "--include-module=server",
         "--include-package=core",
-        # 排除非 Windows 平台
+        # 排除非 Windows 平台和不兼容 Nuitka 的包
         "--nofollow-import-to=playwright",
         "--nofollow-import-to=meilisearch",
         "--nofollow-import-to=PIL",
