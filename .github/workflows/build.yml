@@ -26,6 +26,19 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Patch pywebview plugin (add win32 support)
+        run: |
+          $pluginFile = Get-ChildItem -Recurse -Path ".venv" -Filter "PywebViewPlugin.py" | Select-Object -First 1 -ExpandProperty FullName
+          if ($pluginFile) {
+            $content = Get-Content $pluginFile -Raw
+            $content = $content -replace '"webview\.platforms\.winforms",', "`"webview.platforms.win32`",`"webview.platforms.winforms`","
+            Set-Content $pluginFile $content -NoNewline
+            Write-Host "Patched: $pluginFile"
+          } else {
+            Write-Error "PywebViewPlugin.py not found"
+            exit 1
+          }
+
       - name: Build with Nuitka
         run: uv run python build_nuitka.py
 
