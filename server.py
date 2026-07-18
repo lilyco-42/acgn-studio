@@ -1,12 +1,9 @@
-import io
 import json
 import threading
-from urllib.parse import quote
 
 import httpx
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, SQLModel, col, select
 
@@ -135,19 +132,21 @@ def get_character_detail(character_id: int):
 
 
 @app.get("/api/download")
-def download_file(url: str = Query(...), filename: str = Query(...)):
+def download_file(
+    url: str = Query(...),
+    filename: str = Query(...),
+    character: str = Query(default=""),
+):
     resp = httpx.get(url, headers=HEADERS, timeout=60, follow_redirects=True)
     if resp.status_code != 200:
         return {"error": f"HTTP {resp.status_code}"}
 
-    encoded_name = quote(filename)
-    content_disposition = f"attachment; filename*=UTF-8''{encoded_name}"
+    char_dir = DOWNLOAD_DIR / character if character else DOWNLOAD_DIR
+    char_dir.mkdir(parents=True, exist_ok=True)
+    filepath = char_dir / filename
+    filepath.write_bytes(resp.content)
 
-    return StreamingResponse(
-        io.BytesIO(resp.content),
-        media_type="application/octet-stream",
-        headers={"Content-Disposition": content_disposition},
-    )
+    return {"path": str(filepath), "filename": filename}
 
 
 @app.get("/api/download/batch")

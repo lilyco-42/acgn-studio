@@ -254,19 +254,13 @@
         async function downloadFile(url, filename, btnId) {
             const btn = document.getElementById(btnId);
             if (btn) btn.textContent = '...';
+            const charName = currentChar?.name || '';
             try {
-                const res = await fetch(`/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const blob = await res.blob();
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(a.href);
+                const res = await fetch(`/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}&character=${encodeURIComponent(charName)}`);
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
                 if (btn) { btn.textContent = '✓'; btn.classList.add('done'); }
-                showToast(`已下载 ${filename}`);
+                showToastWithOpen(`已下载 ${filename}`, data.path.replace(/[^\\/]+$/, ''));
             } catch (e) {
                 if (btn) btn.textContent = '⬇';
                 showToast(`下载失败: ${filename}`);
