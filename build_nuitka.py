@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -6,6 +7,12 @@ ROOT = Path(__file__).parent
 
 
 def build():
+    # 清理上次构建缓存，避免残留文件冲突
+    build_dir = ROOT / "build"
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
+        print("已清理 build 目录")
+
     cmd = [
         sys.executable,
         "-m",
