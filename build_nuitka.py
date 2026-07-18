@@ -12,7 +12,7 @@ def build():
         "nuitka",
         "--standalone",
         "--enable-plugin=pywebview",
-        "--windows-console-mode=disable",
+        "--windows-console-mode=force",
         "--company-name=ACGN-Studio",
         "--product-name=ACGN-Studio",
         "--product-version=0.1.0",
@@ -22,7 +22,7 @@ def build():
         "--include-windows-runtime-dlls=no",
         # 数据文件
         f"--include-data-dir={ROOT / 'frontend'}=frontend",
-        # 隐式依赖（不含 webview，插件自动处理）
+        # 包含
         "--include-package=sqlmodel",
         "--include-package=fastapi",
         "--include-package=uvicorn",
@@ -30,11 +30,10 @@ def build():
         "--include-package=pydantic",
         "--include-package=httpx",
         "--include-package=mwparserfromhell",
-        # 排除非 Windows 平台模块
-        "--nofollow-import-to=webview.platforms.android",
-        "--nofollow-import-to=webview.platforms.gtk",
-        "--nofollow-import-to=webview.platforms.cocoa",
-        "--nofollow-import-to=webview.platforms.qt",
+        "--include-package=pythonnet",
+        "--include-module=server",
+        "--include-package=core",
+        # 排除非 Windows 平台
         "--nofollow-import-to=playwright",
         "--nofollow-import-to=meilisearch",
         "--nofollow-import-to=PIL",

@@ -1,5 +1,7 @@
 import io
 import json
+import threading
+import time
 from urllib.parse import quote
 
 import httpx
@@ -7,11 +9,12 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from sqlmodel import Session, select
+from sqlmodel import Session, SQLModel, col, select
 
 from core.database import engine
 from core.models import Character
 from core.paths import BASE_DIR
+from core.prts import fetch_character, fetch_character_list
 from core.prts.x_search import HEADERS
 from core.search import search_character
 
@@ -25,6 +28,60 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 初始化状态
+_init_state = {"running": False, "done": False, "current": 0, "total": 0, "log": []}
+
+
+def _init_characters():
+    SQLModel.metadata.create_all(engine)
+    _init_state["running"] = True
+
+    try:
+        char_list = fetch_character_list()
+        _init_state["total"] = len(char_list)
+        _init_state["log"].append(f"获取到 {len(char_list)} 个干员")
+    except Exception as e:
+        _init_state["log"].append(f"获取干员列表失败: {e}")
+        _init_state["running"] = False
+        return
+
+    with Session(engine) as session:
+        for i, char_ref in enumerate(char_list):
+            name = char_ref["name"]
+            _init_state["current"] = i + 1
+
+            exists = session.exec(
+                select(Character).where(col(Character.name) == name)
+            ).first()
+            if exists:
+                continue
+
+            try:
+                data = fetch_character(name)
+                character = Character(**data)
+                session.add(character)
+                session.commit()
+                _init_state["log"].append(f"[{i + 1}/{len(char_list)}] {name} 写入成功")
+            except Exception as e:
+                _init_state["log"].append(
+                    f"[{i + 1}/{len(char_list)}] {name} 失败: {e}"
+                )
+
+            time.sleep(1)
+
+    _init_state["done"] = True
+    _init_state["running"] = False
+
+
+@app.on_event("startup")
+def on_startup():
+    threading.Thread(target=_init_characters, daemon=True).start()
+
+
+@app.get("/api/init-status")
+def init_status():
+    return _init_state
 
 
 @app.get("/api/search")

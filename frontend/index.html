@@ -60,6 +60,11 @@
         .empty h2 { font-size: 18px; margin-bottom: 8px; }
         .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #2cb491; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .toast.show { opacity: 1; }
+        .init-banner { background: #1a1a2e; border-bottom: 1px solid #f4c430; padding: 12px 32px; display: flex; align-items: center; gap: 12px; font-size: 13px; color: #f4c430; }
+        .init-banner.hidden { display: none; }
+        .init-bar { flex: 1; height: 4px; background: #2a2a3e; border-radius: 2px; overflow: hidden; }
+        .init-bar-fill { height: 100%; background: #f4c430; transition: width 0.3s; border-radius: 2px; }
+        .init-text { min-width: 200px; }
     </style>
 </head>
 <body>
@@ -71,11 +76,15 @@
             <button onclick="doSearch()">搜索</button>
         </div>
     </div>
+    <div class="init-banner hidden" id="initBanner">
+        <span class="init-text" id="initText">正在初始化数据库...</span>
+        <div class="init-bar"><div class="init-bar-fill" id="initBarFill" style="width:0%"></div></div>
+    </div>
     <div class="stats" id="stats"></div>
     <div class="grid" id="grid"></div>
     <div class="empty" id="empty" style="display:none;">
         <h2>暂无数据</h2>
-        <p>请先运行 python init_db.py 初始化数据库</p>
+        <p>数据库正在初始化中，请稍候...</p>
     </div>
     <div class="detail-overlay" id="detailOverlay">
         <button class="detail-close" onclick="closeDetail()">X</button>
@@ -87,6 +96,27 @@
         let allCharacters = [];
         let currentAudio = null;
         let currentChar = null;
+
+        async function pollInit() {
+            try {
+                const res = await fetch('/api/init-status');
+                const s = await res.json();
+                if (s.done) {
+                    document.getElementById('initBanner').classList.add('hidden');
+        pollInit();
+                    return;
+                }
+                if (s.running || s.total > 0) {
+                    document.getElementById('initBanner').classList.remove('hidden');
+                    const pct = s.total > 0 ? Math.round((s.current / s.total) * 100) : 0;
+                    document.getElementById('initBarFill').style.width = pct + '%';
+                    document.getElementById('initText').textContent = s.total > 0
+                        ? `正在初始化数据库... ${s.current}/${s.total} (${pct}%)`
+                        : '正在获取干员列表...';
+                }
+            } catch (e) {}
+            setTimeout(pollInit, 2000);
+        }
 
         async function loadCharacters() {
             const res = await fetch('/api/characters');
