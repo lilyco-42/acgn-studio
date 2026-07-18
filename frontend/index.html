@@ -58,8 +58,13 @@
         .illust-label { font-size: 11px; color: #888; padding: 6px 8px; text-align: center; }
         .empty { text-align: center; padding: 80px 32px; color: #555; }
         .empty h2 { font-size: 18px; margin-bottom: 8px; }
-        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #2cb491; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .loading { text-align: center; padding: 60px 32px; color: #888; font-size: 14px; }
+        .loading .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #333; border-top-color: #f4c430; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #2cb491; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 80vw; text-align: center; }
         .toast.show { opacity: 1; }
+        .toast-wrap { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+        .toast-wrap .open-btn { background: #fff; color: #2cb491; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; }
         .init-banner { background: #1a1a2e; border-bottom: 1px solid #f4c430; padding: 12px 32px; display: flex; align-items: center; gap: 12px; font-size: 13px; color: #f4c430; }
         .init-banner.hidden { display: none; }
         .init-bar { flex: 1; height: 4px; background: #2a2a3e; border-radius: 2px; overflow: hidden; }
@@ -103,7 +108,7 @@
                 const s = await res.json();
                 if (s.done) {
                     document.getElementById('initBanner').classList.add('hidden');
-        pollInit();
+                    loadCharacters();
                     return;
                 }
                 if (s.running || s.total > 0) {
@@ -140,9 +145,9 @@
                     <div class="card-body">
                         <div class="card-name">${c.name}</div>
                         <div class="card-meta">
-                            <span class="card-tag tag-rarity">${'★'.repeat(c.rarity)}</span>
-                            <span class="card-tag tag-profession">${c.profession}</span>
-                            <span class="card-tag tag-faction">${c.faction}</span>
+                            <span class="card-tag tag-rarity">${c.rarity ? '★'.repeat(c.rarity) : ''}</span>
+                            <span class="card-tag tag-profession">${c.profession || ''}</span>
+                            <span class="card-tag tag-faction">${c.faction || ''}</span>
                         </div>
                     </div>
                 </div>
@@ -162,23 +167,39 @@
 
         const ILLUST_LABELS = { elite0: '精0立绘', elite2: '精2立绘' };
 
-        function showDetail(id) {
+        async function showDetail(id) {
             const c = allCharacters.find(x => x.id === id);
             if (!c) return;
             currentChar = c;
 
-            const illustrations = Object.entries(c.illustration_urls || {});
-            const voices = c.voice_lines || [];
-            const voiceUrls = c.voice_urls || {};
+            document.getElementById('detailPanel').innerHTML = `
+                <div class="loading"><div class="spinner"></div><div>正在加载 ${c.name} 的详细数据...</div></div>`;
+            document.getElementById('detailOverlay').classList.add('active');
+
+            let detail;
+            try {
+                const res = await fetch(`/api/characters/${id}/detail`);
+                detail = await res.json();
+                if (detail.error) throw new Error(detail.error);
+            } catch (e) {
+                document.getElementById('detailPanel').innerHTML = `
+                    <div class="loading">加载失败: ${e.message}</div>`;
+                return;
+            }
+
+            currentChar = detail;
+            const illustrations = Object.entries(detail.illustration_urls || {});
+            const voices = detail.voice_lines || [];
+            const voiceUrls = detail.voice_urls || {};
 
             let html = `
-                <img class="detail-illustration" src="${c.illustration_urls?.elite2 || c.illustration_urls?.elite0 || c.avatar_url}" alt="${c.name}" />
+                <img class="detail-illustration" src="${detail.illustration_urls?.elite2 || detail.illustration_urls?.elite0 || detail.avatar_url}" alt="${detail.name}" />
                 <div class="detail-info">
-                    <div class="detail-name">${c.name}</div>
+                    <div class="detail-name">${detail.name}</div>
                     <div class="detail-tags">
-                        <span class="card-tag tag-rarity">${'★'.repeat(c.rarity)}</span>
-                        <span class="card-tag tag-profession">${c.profession}</span>
-                        <span class="card-tag tag-faction">${c.faction}</span>
+                        <span class="card-tag tag-rarity">${detail.rarity ? '★'.repeat(detail.rarity) : ''}</span>
+                        <span class="card-tag tag-profession">${detail.profession || ''}</span>
+                        <span class="card-tag tag-faction">${detail.faction || ''}</span>
                     </div>
             `;
 
@@ -186,10 +207,10 @@
                 html += `<div class="detail-section"><h3>立绘 <button class="batch-btn" onclick="downloadAllIllustrations()">全部下载</button></h3><div class="illustration-grid">`;
                 for (const [key, url] of illustrations) {
                     const label = ILLUST_LABELS[key] || key;
-                    const fname = `${c.name}_${label}.png`;
+                    const fname = `${detail.name}_${label}.png`;
                     html += `
                         <div class="illust-card">
-                            <img src="${url}" alt="${c.name} ${key}" loading="lazy" />
+                            <img src="${url}" alt="${detail.name} ${key}" loading="lazy" />
                             <button class="illust-dl" id="dl-il-${key}" onclick="event.stopPropagation();downloadFile('${url}','${fname}','dl-il-${key}')">⬇</button>
                             <div class="illust-label">${label}</div>
                         </div>`;
@@ -202,7 +223,7 @@
                 for (const v of voices) {
                     const vk = v.file?.replace('.wav', '').toLowerCase() || '';
                     const audioUrl = voiceUrls[vk] || '';
-                    const fname = `${c.name}_${v.title || vk}.mp3`;
+                    const fname = `${detail.name}_${v.title || vk}.mp3`;
                     html += `
                         <div class="voice-item">
                             <button class="voice-play" onclick="playVoice('${audioUrl}')">▶</button>
@@ -216,7 +237,6 @@
 
             html += `</div>`;
             document.getElementById('detailPanel').innerHTML = html;
-            document.getElementById('detailOverlay').classList.add('active');
         }
 
         function closeDetail() {
@@ -260,9 +280,12 @@
                 return { url, filename: `${currentChar.name}_${label}.png` };
             });
             showToast(`开始下载 ${items.length} 张立绘...`);
-            for (const item of items) {
-                await downloadFile(item.url, item.filename, '');
-                await new Promise(r => setTimeout(r, 300));
+            try {
+                const res = await fetch(`/api/download/batch?urls=${encodeURIComponent(JSON.stringify(items))}&character=${encodeURIComponent(currentChar.name)}`);
+                const data = await res.json();
+                showToastWithOpen(`下载完成，共 ${data.files.length} 个文件`, data.dir);
+            } catch (e) {
+                showToast('批量下载失败');
             }
         }
 
@@ -274,24 +297,41 @@
                 return { url: voiceUrls[vk], filename: `${currentChar.name}_${v.title || vk}.mp3` };
             }).filter(x => x.url);
             showToast(`开始下载 ${items.length} 条语音...`);
-            for (const item of items) {
-                await downloadFile(item.url, item.filename, '');
-                await new Promise(r => setTimeout(r, 200));
+            try {
+                const res = await fetch(`/api/download/batch?urls=${encodeURIComponent(JSON.stringify(items))}&character=${encodeURIComponent(currentChar.name)}`);
+                const data = await res.json();
+                showToastWithOpen(`下载完成，共 ${data.files.length} 个文件`, data.dir);
+            } catch (e) {
+                showToast('批量下载失败');
             }
         }
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.textContent = msg;
+            t.innerHTML = msg;
             t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function showToastWithOpen(msg, dir) {
+            const t = document.getElementById('toast');
+            t.innerHTML = `<div class="toast-wrap"><span>${msg}</span><button class="open-btn" onclick="openFolder('${dir.replace(/\\/g, '\\\\')}')">打开文件夹</button></div>`;
+            t.classList.add('show');
+            clearTimeout(t._hideTimer);
+            t._hideTimer = setTimeout(() => t.classList.remove('show'), 8000);
+        }
+
+        async function openFolder(dir) {
+            try {
+                await fetch(`/api/open-folder?path=${encodeURIComponent(dir)}`);
+            } catch (e) {}
         }
 
         document.getElementById('detailOverlay').addEventListener('click', e => {
             if (e.target === e.currentTarget) closeDetail();
         });
 
-        loadCharacters();
+        pollInit();
     </script>
 </body>
 </html>

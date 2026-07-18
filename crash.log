@@ -5,3 +5,24 @@
 [OK] ui.py __main__ start
 [OK] Starting uvicorn server...
 [OK] webview.create_window done, calling webview.start()
+[OK] BASE_DIR = D:\Code\prts\search
+[OK] CWD = D:\Code\prts\search
+[OK] import uvicorn
+[OK] import webview
+[OK] ui.py __main__ start
+[OK] Starting uvicorn server...
+[OK] webview.create_window done, calling webview.start()
+[OK] BASE_DIR = D:\Code\prts\search
+[OK] CWD = D:\Code\prts\search
+[OK] import uvicorn
+[OK] import webview
+[OK] ui.py __main__ start
+[OK] Starting uvicorn server...
+[OK] webview.create_window done, calling webview.start()
+[OK] BASE_DIR = D:\Code\prts\search
+[OK] CWD = D:\Code\prts\search
+[OK] import uvicorn
+[OK] import webview
+[OK] ui.py __main__ start
+[OK] Starting uvicorn server...
+[OK] webview.create_window done, calling webview.start()
