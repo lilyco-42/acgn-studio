@@ -1,6 +1,5 @@
 import io
 import json
-from pathlib import Path
 from urllib.parse import quote
 
 import httpx
@@ -12,12 +11,13 @@ from sqlmodel import Session, select
 
 from core.database import engine
 from core.models import Character
+from core.paths import BASE_DIR
 from core.prts.x_search import HEADERS
 from core.search import search_character
 
 app = FastAPI()
 
-DOWNLOAD_DIR = Path("downloads")
+DOWNLOAD_DIR = BASE_DIR / "downloads"
 
 app.add_middleware(
     CORSMiddleware,
@@ -106,4 +106,6 @@ def _character_to_dict(c: Character) -> dict:
     }
 
 
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount(
+    "/", StaticFiles(directory=str(BASE_DIR / "frontend"), html=True), name="frontend"
+)

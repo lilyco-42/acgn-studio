@@ -7,7 +7,9 @@ ROOT = Path(__file__).parent
 
 def build():
     cmd = [
-        sys.executable, "-m", "nuitka",
+        sys.executable,
+        "-m",
+        "nuitka",
         "--standalone",
         "--enable-plugin=pywebview",
         "--windows-console-mode=disable",
@@ -15,7 +17,7 @@ def build():
         "--product-name=ACGN-Studio",
         "--product-version=0.1.0",
         f"--output-dir={ROOT / 'build'}",
-        f"--output-filename=ACGN-Studio.exe",
+        "--output-filename=ACGN-Studio.exe",
         "--assume-yes-for-downloads",
         "--include-windows-runtime-dlls=no",
         # 数据文件

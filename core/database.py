@@ -1,3 +1,5 @@
 from sqlmodel import create_engine
 
-engine = create_engine("sqlite:///data/app.db")
+from .paths import BASE_DIR
+
+engine = create_engine(f"sqlite:///{BASE_DIR / 'data' / 'app.db'}")

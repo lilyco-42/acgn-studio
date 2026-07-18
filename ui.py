@@ -3,13 +3,25 @@ import threading
 import uvicorn
 import webview
 
+from core.paths import BASE_DIR
+
 
 def run_server():
-
-    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run(
+        "server:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=False,
+        log_level="info",
+    )
 
 
 if __name__ == "__main__":
+    # 确保工作目录为 exe 所在目录
+    import os
+
+    os.chdir(BASE_DIR)
+
     # 启动 FastAPI
     threading.Thread(target=run_server, daemon=True).start()
 
