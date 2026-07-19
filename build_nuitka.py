@@ -61,9 +61,7 @@ def build(mode: str = "release"):
     if db_path.exists():
         cmd.insert(-1, f"--include-data-dir={ROOT / 'data'}=data")
 
-    if is_debug:
-        cmd.append("--debug")
-    else:
+    if not is_debug:
         cmd.append("--python-flag=-O")
 
     print(f"Building [{mode.upper()}] with Nuitka...")
