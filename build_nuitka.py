@@ -19,7 +19,6 @@ def build(mode: str = "release"):
         "-m",
         "nuitka",
         "--standalone",
-        "--enable-plugin=pywebview",
         f"--windows-console-mode={'force' if is_debug else 'disable'}",
         "--company-name=ACGN-Studio",
         "--product-name=ACGN-Studio",

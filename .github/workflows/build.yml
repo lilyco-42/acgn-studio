@@ -44,8 +44,7 @@ jobs:
             Set-Content $pluginFile $content -NoNewline
             Write-Host "Patched: $pluginFile"
           } else {
-            Write-Error "PywebViewPlugin.py not found"
-            exit 1
+            Write-Warning "PywebViewPlugin.py not found, skipping patch"
           }
 
       - name: Build with Nuitka
@@ -56,13 +55,22 @@ jobs:
           if (Test-Path "build/ui.dist/ACGN-Studio.exe") {
             Write-Host "Build successful!"
             Get-ChildItem build/ui.dist/ | Select-Object Name,Length
+          } elseif (Test-Path "build/ACGN-Studio.dist/ACGN-Studio.exe") {
+            Write-Host "Build successful!"
+            Get-ChildItem build/ACGN-Studio.dist/ | Select-Object Name,Length
           } else {
+            Get-ChildItem build/ -Recurse -Filter "*.exe" | Select-Object FullName
             Write-Error "Build failed - exe not found"
             exit 1
           }
 
       - name: Package
-        run: Compress-Archive -Path build/ui.dist/* -DestinationPath ACGN-Studio-windows.zip
+        run: |
+          if (Test-Path "build/ui.dist") {
+            Compress-Archive -Path build/ui.dist/* -DestinationPath ACGN-Studio-windows.zip
+          } else {
+            Compress-Archive -Path build/ACGN-Studio.dist/* -DestinationPath ACGN-Studio-windows.zip
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
