@@ -1,4 +1,6 @@
 import os
+import random
+import socket
 import sys
 import threading
 import traceback
@@ -13,6 +15,20 @@ def _write_log(msg: str):
         log_path = Path(__file__).parent / "crash.log"
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(msg + "\n")
+
+
+def find_available_port(default: int = 8000) -> int:
+    """检测默认端口是否可用，不可用则随机 8000-8999"""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", default))
+            return default
+    except OSError:
+        port = random.randint(8000, 8999)
+        while port == default:
+            port = random.randint(8000, 8999)
+        _write_log(f"[Port] 端口 {default} 被占用，随机使用 {port}")
+        return port
 
 
 try:
@@ -42,13 +58,16 @@ except Exception as e:
     raise
 
 
+SERVER_PORT = find_available_port()
+
+
 def run_server():
     try:
         _write_log("[OK] Starting uvicorn server...")
         uvicorn.run(
             "server:app",
             host="127.0.0.1",
-            port=8000,
+            port=SERVER_PORT,
             reload=False,
             log_level="info",
         )
@@ -62,7 +81,7 @@ if __name__ == "__main__":
 
     webview.create_window(
         "ACGN Studio",
-        "http://127.0.0.1:8000",
+        f"http://127.0.0.1:{SERVER_PORT}",
         width=1000,
         height=700,
     )
