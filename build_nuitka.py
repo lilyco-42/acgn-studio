@@ -32,35 +32,39 @@ def build(mode: str = "release"):
         # 数据文件
         f"--include-data-dir={ROOT / 'frontend'}=frontend",
         f"--include-data-dir={ROOT / 'assets'}=assets",
-        # 包含
-        "--include-package=sqlmodel",
-        "--include-package=fastapi",
-        "--include-package=uvicorn",
-        "--include-package=starlette",
-        "--include-package=pydantic",
-        "--include-package=httpx",
-        "--include-package=mwparserfromhell",
-        "--include-package=pythonnet",
+        # 入口
         "--include-module=server",
         "--include-package=core",
-        # 排除非 Windows 平台和不兼容 Nuitka 的包
         "--nofollow-import-to=playwright",
         "--nofollow-import-to=meilisearch",
         "--nofollow-import-to=PIL",
         "--nofollow-import-to=numpy",
         "--nofollow-import-to=scipy",
-        # 入口
+        "--nofollow-import-to=pythonnet",
+        "--nofollow-import-to=clr_loader",
+        "--nofollow-import-to=pythonnet.clr",
+        "--nofollow-import-to=sqlalchemy.dialects",
+        "--nofollow-import-to=sqlalchemy.ext.baked",
+        "--nofollow-import-to=sqlalchemy.ext.compiler",
+        "--nofollow-import-to=sqlalchemy.ext.horizontal_shard",
+        "--nofollow-import-to=sqlalchemy.ext.hybrid",
+        "--nofollow-import-to=sqlalchemy.ext.indexable_extension",
+        "--nofollow-import-to=sqlalchemy.ext.instrumented",
+        "--nofollow-import-to=sqlalchemy.ext.mutable",
+        "--nofollow-import-to=sqlalchemy.orm.context",
+        "--nofollow-import-to=sqlalchemy.testing",
+        "--nofollow-import-to=pydantic.v1",
         str(ROOT / "ui.py"),
     ]
+
+    db_path = ROOT / "data" / "app.db"
+    if db_path.exists():
+        cmd.insert(-1, f"--include-data-dir={ROOT / 'data'}=data")
 
     if is_debug:
         cmd.append("--debug")
     else:
         cmd.append("--python-flag=-O")
-
-    db_path = ROOT / "data" / "app.db"
-    if db_path.exists():
-        cmd.insert(-1, f"--include-data-dir={ROOT / 'data'}=data")
 
     print(f"Building [{mode.upper()}] with Nuitka...")
     subprocess.run(cmd, check=True)
