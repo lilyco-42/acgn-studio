@@ -19,7 +19,7 @@ def build():
         "nuitka",
         "--standalone",
         "--enable-plugin=pywebview",
-        "--windows-console-mode=force",
+        "--windows-console-mode=disable",
         "--company-name=ACGN-Studio",
         "--product-name=ACGN-Studio",
         "--product-version=0.1.0",
