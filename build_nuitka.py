@@ -28,7 +28,7 @@ def build(mode: str = "release"):
         "--output-filename=ACGN-Studio.exe",
         f"--windows-icon-from-ico={ROOT / 'assets' / 'prts.ico'}",
         "--assume-yes-for-downloads",
-        "--include-windows-runtime-dlls=no",
+        "--include-windows-runtime-dlls=yes",
         # 数据文件
         f"--include-data-dir={ROOT / 'frontend'}=frontend",
         f"--include-data-dir={ROOT / 'assets'}=assets",
