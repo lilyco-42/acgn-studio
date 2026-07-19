@@ -6,12 +6,13 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 
 
-def build():
-    # 清理上次构建缓存，避免残留文件冲突
+def build(mode: str = "release"):
     build_dir = ROOT / "build"
     if build_dir.exists():
         shutil.rmtree(build_dir)
         print("已清理 build 目录")
+
+    is_debug = mode == "debug"
 
     cmd = [
         sys.executable,
@@ -19,7 +20,7 @@ def build():
         "nuitka",
         "--standalone",
         "--enable-plugin=pywebview",
-        "--windows-console-mode=disable",
+        f"--windows-console-mode={'force' if is_debug else 'disable'}",
         "--company-name=ACGN-Studio",
         "--product-name=ACGN-Studio",
         "--product-version=0.1.0",
@@ -52,13 +53,22 @@ def build():
         str(ROOT / "ui.py"),
     ]
 
+    if is_debug:
+        cmd.append("--debug")
+    else:
+        cmd.append("--python-flag=-O")
+
     db_path = ROOT / "data" / "app.db"
     if db_path.exists():
         cmd.insert(-1, f"--include-data-dir={ROOT / 'data'}=data")
 
-    print("Building with Nuitka...")
+    print(f"Building [{mode.upper()}] with Nuitka...")
     subprocess.run(cmd, check=True)
 
 
 if __name__ == "__main__":
-    build()
+    mode = sys.argv[1] if len(sys.argv) > 1 else "release"
+    if mode not in ("debug", "release"):
+        print(f"用法: python build_nuitka.py [debug|release]")
+        sys.exit(1)
+    build(mode)
