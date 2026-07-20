@@ -504,6 +504,7 @@
             if (_currentQr === id) {
                 display.style.display = 'none';
                 img.style.display = 'none';
+                img.src = '';
                 _currentQr = null;
                 return;
             }
@@ -515,15 +516,14 @@
                 display.style.display = 'block';
                 loading.style.display = 'block';
                 img.style.display = 'none';
-                const qrSrc = qrImage.startsWith('http') ? qrImage : '/api/sponsor/assets/' + qrImage;
+                img.src = '';
+                const qrSrc = qrImage.startsWith('http') ? qrImage : '/api/sponsor/assets/' + qrImage + '?t=' + Date.now();
                 img.onload = function() {
                     loading.style.display = 'none';
                     img.style.display = 'block';
                 };
                 img.onerror = function() {
-                    loading.style.display = 'none';
-                    display.style.display = 'none';
-                    _currentQr = null;
+                    loading.innerHTML = '<span style="color:#f44">图片加载失败</span>';
                 };
                 img.src = qrSrc;
             } else if (url) {
