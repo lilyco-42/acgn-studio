@@ -61,9 +61,16 @@ except Exception as e:
 SERVER_PORT = find_available_port()
 
 
+try:
+    from server import app as server_app
+    _write_log("[OK] import server")
+except Exception as e:
+    _write_log(f"[FAIL] import server: {e}\n{traceback.format_exc()}")
+    raise
+
+
 def run_server():
     try:
-        from server import app as server_app
         _write_log("[OK] Starting uvicorn server...")
         uvicorn.run(
             server_app,
@@ -72,6 +79,7 @@ def run_server():
             reload=False,
             log_level="info",
         )
+        _write_log("[OK] uvicorn exited normally")
     except Exception as e:
         _write_log(f"[FAIL] uvicorn: {e}\n{traceback.format_exc()}")
 
@@ -84,6 +92,9 @@ if __name__ == "__main__":
     import time
     time.sleep(2)
 
+    icon_path = str(Path(__file__).parent / "assets" / "prts.ico")
+    _write_log(f"[OK] icon_path = {icon_path}")
+
     webview.create_window(
         "ACGN Studio",
         f"http://127.0.0.1:{SERVER_PORT}",
@@ -91,5 +102,5 @@ if __name__ == "__main__":
         height=700,
     )
     _write_log("[OK] webview.create_window done, calling webview.start()")
-    webview.start()
+    webview.start(icon=icon_path)
     _write_log("[OK] webview.start() returned")

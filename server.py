@@ -18,10 +18,21 @@ from core.search import search_character
 
 # 共享模块路径（D:\Code\shared）
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-from shared.sponsor import sponsor_router
+from shared.sponsor import sponsor_router, set_config, SponsorConfig, SponsorMethod, TutorialLink
 
 app = FastAPI()
 app.include_router(sponsor_router)
+set_config(SponsorConfig(
+    methods=[
+        SponsorMethod(name="微信支付", icon="💚", qr_image="assets/wechat_pay.png"),
+        SponsorMethod(name="支付宝", icon="💙", qr_image="assets/alipay.png"),
+        SponsorMethod(name="爱发电", icon="🧡", url="https://afdian.net/"),
+    ],
+    tutorials=[TutorialLink(title="B 站教程视频", url="https://www.bilibili.com/video/BV1xx411c7mD")],
+    project_name="ACGN Studio",
+    project_version="1.0.0",
+    project_repo="https://github.com/lilyco-42/acgn-studio",
+))
 
 DOWNLOAD_DIR = BASE_DIR / "downloads"
 
