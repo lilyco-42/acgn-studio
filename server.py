@@ -16,9 +16,7 @@ from core.prts import fetch_character, fetch_character_list
 from core.prts.x_search import HEADERS, get_media_path, MEDIA_CDN
 from core.search import search_character
 
-# 共享模块路径（D:\Code\shared）
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-from shared.sponsor import sponsor_router, set_config, SponsorConfig, SponsorMethod, TutorialLink
+from sponsor import sponsor_router, set_config, SponsorConfig, SponsorMethod, TutorialLink
 
 app = FastAPI()
 app.include_router(sponsor_router)
