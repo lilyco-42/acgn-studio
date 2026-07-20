@@ -63,9 +63,10 @@ SERVER_PORT = find_available_port()
 
 def run_server():
     try:
+        from server import app as server_app
         _write_log("[OK] Starting uvicorn server...")
         uvicorn.run(
-            "server:app",
+            server_app,
             host="127.0.0.1",
             port=SERVER_PORT,
             reload=False,
@@ -77,7 +78,11 @@ def run_server():
 
 if __name__ == "__main__":
     _write_log("[OK] ui.py __main__ start")
-    threading.Thread(target=run_server, daemon=True).start()
+    server_thread = threading.Thread(target=run_server, daemon=True)
+    server_thread.start()
+
+    import time
+    time.sleep(2)
 
     webview.create_window(
         "ACGN Studio",
