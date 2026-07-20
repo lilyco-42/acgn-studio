@@ -31,6 +31,7 @@ def build(mode: str = "release"):
         # 数据文件
         f"--include-data-dir={ROOT / 'frontend'}=frontend",
         f"--include-data-dir={ROOT / 'assets'}=assets",
+        f"--include-data-dir={ROOT / 'sponsor' / 'assets'}=sponsor/assets",
         # 入口
         "--include-module=server",
         "--include-package=server",
