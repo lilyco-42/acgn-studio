@@ -74,6 +74,78 @@
         .init-bar { flex: 1; height: 4px; background: #2a2a3e; border-radius: 2px; overflow: hidden; }
         .init-bar-fill { height: 100%; background: #f4c430; transition: width 0.3s; border-radius: 2px; }
         .init-text { min-width: 200px; }
+
+        .sponsor-modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px);
+        }
+        .sponsor-modal-overlay.active { display: flex; }
+        .sponsor-modal {
+            background: #1a1a2e; border: 1px solid #2a2a3e;
+            border-radius: 14px; width: 460px; max-width: 92vw; max-height: 88vh;
+            overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: sponsorIn 0.25s ease;
+        }
+        @keyframes sponsorIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .sponsor-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 18px 22px 0;
+        }
+        .sponsor-header h2 { font-size: 18px; font-weight: 700; color: #f4c430; margin: 0; }
+        .sponsor-close {
+            background: none; border: none; color: #888;
+            font-size: 22px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s;
+        }
+        .sponsor-close:hover { background: rgba(255,255,255,0.08); color: #e0e0e0; }
+        .sponsor-body { padding: 18px 22px 22px; }
+        .sponsor-qr-section { text-align: center; margin-bottom: 18px; }
+        .sponsor-qr-section canvas, .sponsor-qr-section img {
+            border-radius: 10px; border: 3px solid #2a2a3e; margin-bottom: 10px;
+        }
+        .sponsor-qr-label { font-size: 13px; color: #888; }
+        .sponsor-actions { display: flex; gap: 10px; margin-bottom: 18px; }
+        .sponsor-btn {
+            flex: 1; padding: 10px 14px; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .sponsor-btn-copy { background: #f4c430; color: #000; }
+        .sponsor-btn-copy:hover { filter: brightness(1.15); }
+        .sponsor-btn-save {
+            background: #1e1e2e; color: #e0e0e0;
+            border: 1px solid #2a2a3e;
+        }
+        .sponsor-btn-save:hover { border-color: #f4c430; }
+        .sponsor-tutorials { margin-top: 4px; }
+        .sponsor-tutorials .st-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: #888; margin-bottom: 10px;
+        }
+        .sponsor-tutorial-link {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            background: #1e1e2e; border: 1px solid #2a2a3e;
+            border-radius: 8px; color: #e0e0e0; text-decoration: none;
+            font-size: 13px; cursor: pointer; transition: all 0.2s; margin-bottom: 8px;
+        }
+        .sponsor-tutorial-link:hover { border-color: #f4c430; background: rgba(244,196,48,0.08); }
+        .sponsor-tutorial-icon {
+            width: 32px; height: 32px; border-radius: 6px;
+            background: #f4c430; color: #000;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; flex-shrink: 0;
+        }
+        .sponsor-tutorial-info { flex: 1; }
+        .sponsor-tutorial-title { font-weight: 600; }
+        .sponsor-tutorial-desc { font-size: 11px; color: #888; margin-top: 2px; }
+        .sponsor-tutorial-arrow { color: #888; font-size: 12px; }
+        .sponsor-footer {
+            text-align: center; padding-top: 14px; border-top: 1px solid #2a2a3e;
+            font-size: 11px; color: #888;
+        }
+        .sponsor-footer a { color: #f4c430; text-decoration: none; }
+        .sponsor-footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -83,6 +155,7 @@
         <div class="search-bar">
             <input id="searchInput" type="text" placeholder="搜索干员名称..." />
             <button onclick="doSearch()">搜索</button>
+            <button onclick="openSponsorModal()" style="background:transparent;color:#f4c430;border:1px solid #f4c430">赞助</button>
         </div>
     </div>
     <div class="init-banner hidden" id="initBanner">
@@ -350,6 +423,93 @@
         });
 
         pollInit();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <div class="sponsor-modal-overlay" id="sponsorModalOverlay" onclick="if(event.target===this)closeSponsorModal()">
+        <div class="sponsor-modal">
+            <div class="sponsor-header">
+                <h2>赞助与教程</h2>
+                <button class="sponsor-close" onclick="closeSponsorModal()">&times;</button>
+            </div>
+            <div class="sponsor-body">
+                <div class="sponsor-qr-section">
+                    <div id="sponsorQR"></div>
+                    <div class="sponsor-qr-label">扫码赞助 ACGN Studio</div>
+                </div>
+                <div class="sponsor-actions">
+                    <button class="sponsor-btn sponsor-btn-copy" id="sponsorCopyBtn" onclick="copySponsorLink()">复制赞助链接</button>
+                    <button class="sponsor-btn sponsor-btn-save" onclick="saveQRCode()">保存二维码</button>
+                </div>
+                <div class="sponsor-tutorials">
+                    <div class="st-label">教程</div>
+                    <a class="sponsor-tutorial-link" onclick="openTutorial('https://www.bilibili.com/video/BV1xx411c7mD')">
+                        <div class="sponsor-tutorial-icon">&#9654;</div>
+                        <div class="sponsor-tutorial-info">
+                            <div class="sponsor-tutorial-title">B 站教程视频</div>
+                            <div class="sponsor-tutorial-desc">点击在系统浏览器中打开</div>
+                        </div>
+                        <div class="sponsor-tutorial-arrow">&#9656;</div>
+                    </a>
+                </div>
+                <div class="sponsor-footer">
+                    ACGN Studio v1.0.0
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SPONSOR_URL = 'https://example.com/sponsor';
+        const SPONSOR_QR = '';
+
+        function openSponsorModal() {
+            document.getElementById('sponsorModalOverlay').classList.add('active');
+            if (typeof QRCode !== 'undefined') {
+                const el = document.getElementById('sponsorQR');
+                el.innerHTML = '';
+                new QRCode(el, {
+                    text: SPONSOR_QR || SPONSOR_URL,
+                    width: 180, height: 180,
+                    colorDark: '#eeeeee', colorLight: '#1a1a2e',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+        }
+        function closeSponsorModal() {
+            document.getElementById('sponsorModalOverlay').classList.remove('active');
+        }
+        async function copySponsorLink() {
+            try {
+                await navigator.clipboard.writeText(SPONSOR_URL);
+                const btn = document.getElementById('sponsorCopyBtn');
+                btn.textContent = '已复制';
+                setTimeout(() => { btn.innerHTML = '复制赞助链接'; }, 1500);
+            } catch(e) { prompt('请手动复制链接：', SPONSOR_URL); }
+        }
+        async function saveQRCode() {
+            const canvas = document.querySelector('#sponsorQR canvas');
+            if (!canvas) { alert('二维码尚未生成'); return; }
+            const base64 = canvas.toDataURL('image/png');
+            try {
+                const res = await fetch('/api/sponsor/save-file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base64_data: base64, filename: 'sponsor_qr.png' })
+                });
+                const data = await res.json();
+                if (data.success) alert('二维码已保存到: ' + data.path);
+            } catch(e) { alert('保存失败'); }
+        }
+        async function openTutorial(url) {
+            try {
+                await fetch('/api/sponsor/open-external', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'url=' + encodeURIComponent(url)
+                });
+            } catch(e) { window.open(url, '_blank'); }
+        }
     </script>
 </body>
 </html>
